@@ -86,7 +86,7 @@ class PSQL_Connection():
         :return:
         """
 
-        query = f'CREATE DATABASE {dbname};'
+        query = f"CREATE DATABASE {dbname}"
         cursor = self._connection.cursor()
         try:
             cursor.execute(query)
@@ -123,7 +123,7 @@ class PSQL_Connection():
 
         cursor = self._connection.cursor()
         try:
-            cursor.executemany(sql, val)
+            cursor.execute(sql, val)
             self._connection.commit()
             cursor.close()
         except Exception as err:
@@ -139,11 +139,11 @@ class PSQL_Connection():
         :return:
         """
 
-        query = f'''CREATE TABLE {tablename} ({columns});'''
+        query = f"CREATE TABLE {tablename} ({columns})"
         self.execute_query(query)
 
 
-    def table_insert(self, tablename, values):
+    def table_insert(self, tablename, columns, values):
         """
         Insert values into table columns
         :param tablename: table name
@@ -151,11 +151,11 @@ class PSQL_Connection():
         :return:
         """
 
-        query = f'''INSERT INTO {tablename} VALUES {values};'''
+        query = f"INSERT INTO {tablename}({columns}) VALUES({values})"
         self.execute_query(query)
 
 
-    def table_insert_ignore(self, tablename, values):
+    def table_insert_ignore(self, tablename, columns, values):
         """
         Insert values into table without creating duplicate values.
 
@@ -166,7 +166,7 @@ class PSQL_Connection():
         :return:
         """
 
-        query = f'''INSERT IGNORE INTO {tablename} VALUES {values};'''
+        query = f"INSERT INTO {tablename}({columns}) VALUES({values}) ON CONFLICT DO NOTHING"
         self.execute_query(query)
 
 
@@ -179,11 +179,8 @@ class PSQL_Connection():
         :return:
         """
 
-        ns = []
-        for i in range(len(values)):
-            ns.append('%s')
-        ns = ', '.join(ns)
-        sql = f'''INSERT INTO {tablename} {columns} VALUES ({ns})'''
+        ns = ', '.join(['%s'] * len(values))
+        sql = f"INSERT INTO {tablename}({columns}) VALUES {ns}"
         self.execute_query_multi(sql, values)
 
 
@@ -196,11 +193,8 @@ class PSQL_Connection():
         :return:
         """
 
-        ns = []
-        for i in range(len(values)):
-            ns.append('%s')
-        ns = ', '.join(ns)
-        sql = f'''INSERT IGNORE INTO {tablename} {columns} VALUES ({ns})'''
+        ns = ', '.join(['%s'] * len(values))
+        sql = f"INSERT INTO {tablename}({columns}) VALUES {ns} ON CONFLICT DO NOTHING"
         self.execute_query_multi(sql, values)
 
 
@@ -217,46 +211,23 @@ class PSQL_Connection():
             cursor.execute(query)
             result = cursor.fetchall()
             cursor.close()
-        except Error as err:
+        except Exception as err:
             cursor.close()
             raise err
         return result
 
 
-    def create_user(self, user, password):
-
-        query = f'''CREATE USER '{user}'@'{self._host}' IDENTIFIED BY '{password}'''
-        self.execute_query(query)
-
-
-    def print_table_columns(self, tablename):
-
-        query = f'''SELECT * FROM INFORMATION_SCHEMA.COLUMNS'''
-        self.execute_query(query)
-
-
-    def rename_column(self, tablename, oldcol, newcol):
-
-        query = f'''ALTER TABLE {tablename} RENAME COLUMN {oldcol} TO {newcol};'''
-        self.execute_query(query)
-
-
-    def add_unique_index(self, tablename, column):
-
-        query = f'''ALTER TABLE {tablename} ADD UNIQUE INDEX({column});'''
-        self.execute_query(query)
-
-
     def drop_table(self, tablename):
 
-        query = f'''DROP TABLE IF EXISTS {tablename};'''
+        query = f"DROP TABLE IF EXISTS {tablename};"
         self.execute_query(query)
 
 
-    def update_record(self, tablename, column1, wherecolumn, whereval, val):
+    def update_record(self, tablename, column1, val, wherecolumn, whereval):
 
-        sql = f'''UPDATE {tablename} SET {column1} = %s WHERE {wherecolumn} = %s '''
+        sql = f"UPDATE {tablename} SET {column1} = %s WHERE {wherecolumn} = %s"
         val = (val, whereval)
+        print(val)
         self.execute_query_multi(sql, val)
 
 
@@ -266,7 +237,7 @@ class PSQL_Connection():
         self.execute_query(sql, value)
 
     
-    def upsert_records(self, tablename, idcolumn, values, conflict, changecolumn, newvalue):
+    def upsert_records(self, tablename, pk, columns, values):
         """
         Update insert records
 
@@ -276,14 +247,14 @@ class PSQL_Connection():
             values (string): _description_
         """
 
-        sql = f'''INSERT INTO {tablename} ({idcolumn}) VALUES {values} ON CONFLICT ({conflict}]) UPDATE SET {changecolumn} = {newvalue}'''
+        excluded = ', '.join([f'EXCLUDED.{x}' for x in columns.replace(',', '').split()])
+        sql = f"INSERT INTO {tablename}({columns}) VALUES({values}) ON CONFLICT ({pk}) DO UPDATE SET ({columns}) = ({excluded})"
         self.execute_query(sql)
-
 
 
     def last_updated(self, table):
 
-        sql = f'''SELECT UPDATE_TIME FROM information_schema.tables WHERE TABLE_SCHEMA = '{self._current_db}' AND TABLE_NAME = '{table}';'''
+        sql = f"SELECT UPDATE_TIME FROM information_schema.tables WHERE TABLE_SCHEMA = '{self._current_db}' AND TABLE_NAME = '{table}'"
         return self.execute_query(sql)
 
 
