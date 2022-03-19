@@ -99,7 +99,7 @@ class PSQL_Connection():
     def execute_query(self, query):
         """
         Execute a SQL query
-        :param query: Query command
+        :param query: SQL query
         :return:
         """
 
@@ -115,7 +115,7 @@ class PSQL_Connection():
 
     def execute_query_multi(self, sql, val):
         """
-        Execute query with multiple values, escapes characters using %s preventing SQL injection
+        Execute query with multiple values
         :param sql: sql command to execute
         :param val: values to execute on
         :return:
@@ -147,6 +147,7 @@ class PSQL_Connection():
         """
         Insert values into table columns
         :param tablename: table name
+        :param columns: column names
         :param values: values to insert
         :return:
         """
@@ -162,6 +163,7 @@ class PSQL_Connection():
         REQUIRES PRIMARY KEY SET ON TABLE
 
         :param tablename: name of table
+        :param columns: column names
         :param values: values to insert
         :return:
         """
@@ -172,7 +174,7 @@ class PSQL_Connection():
 
     def table_insert_multi(self, tablename, columns, values):
         """
-        Insert multiple values into table
+        Insert multiple values into table, escapes characters using %s preventing SQL injection
         :param tablename: name of table
         :param columns: columns in table
         :param values: values to insert into given columns
@@ -186,9 +188,9 @@ class PSQL_Connection():
 
     def table_insert_multi_unique(self, tablename, columns, values):
         """
-        Insert multiple values into table without duplicates
+        Insert multiple values into table without duplicates, escapes characters using %s preventing SQL injection
         :param tablename: name of table
-        :param columns: columns in table
+        :param columns: column names
         :param values: values to insert into given columns
         :return:
         """
@@ -218,12 +220,26 @@ class PSQL_Connection():
 
 
     def drop_table(self, tablename):
+        """Drop table from schema
+
+        Args:
+            tablename (str): name of table to drop
+        """
 
         query = f"DROP TABLE IF EXISTS {tablename};"
         self.execute_query(query)
 
 
     def update_record(self, tablename, column1, val, wherecolumn, whereval):
+        """Update a record where condition met with a new value
+
+        Args:
+            tablename (str): Table name
+            column1 (str): Column to update value at
+            val (str): New value
+            wherecolumn (str): Column for where condition
+            whereval (str): Value of where condition, value in wherecolumn
+        """
 
         sql = f"UPDATE {tablename} SET {column1} = %s WHERE {wherecolumn} = %s"
         val = (val, whereval)
@@ -232,6 +248,13 @@ class PSQL_Connection():
 
 
     def delete_record(self, tablename, column, value):
+        """Delete records from table
+
+        Args:
+            tablename (str): Table name
+            column (str): column name where value of row is to delete
+            value (str): value in column to delete row
+        """
 
         sql = f'''DELETE FROM {tablename} WHERE {column} = %s'''
         self.execute_query(sql, value)
@@ -242,9 +265,9 @@ class PSQL_Connection():
         Update insert records
 
         Args:
-            tablename (string): _description_
-            columns (string): _description_
-            values (string): _description_
+            tablename (string): table name
+            columns (string): columns in table
+            values (string): values to upsert
         """
 
         excluded = ', '.join([f'EXCLUDED.{x}' for x in columns.replace(',', '').split()])

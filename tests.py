@@ -1,14 +1,5 @@
 from db_query_helper import PSQL_Connection
 
-# test some of te PSQL functions
-#INSERT INTO med.coinprices (symbol, currency, price_usd, volume_24h) VALUES
-#	('BTC', 'Bitcoin', 60000, 40000000000)
-#	, ('XDG', 'Dogecoin', 0.2181, 1983534547)
-#ON CONFLICT (symbol, currency)
-#DO UPDATE SET
-#	price_usd = EXCLUDED.price_usd
-#	, volume_24h = EXCLUDED.volume_24h;
-
 host = 'localhost'
 user = 'postgres'
 password = 'Cumulus.5343'
