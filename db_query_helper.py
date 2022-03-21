@@ -256,7 +256,7 @@ class PSQL_Connection():
             value (str): value in column to delete row
         """
 
-        sql = f'''DELETE FROM {tablename} WHERE {column} = %s'''
+        sql = f"DELETE FROM {tablename} WHERE {column} = %s"
         self.execute_query(sql, value)
 
     
