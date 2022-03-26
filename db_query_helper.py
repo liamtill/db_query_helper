@@ -214,6 +214,7 @@ class PSQL_Connection():
             result = cursor.fetchall()
             cursor.close()
         except Exception as err:
+            cursor.execute("ROLLBACK")
             cursor.close()
             raise err
         return result
