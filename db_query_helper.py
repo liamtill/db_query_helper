@@ -256,8 +256,8 @@ class PSQL_Connection():
             value (str): value in column to delete row
         """
 
-        sql = f"DELETE FROM {tablename} WHERE {column} = %s"
-        self.execute_query(sql, value)
+        sql = f"DELETE FROM {tablename} WHERE {column} = {value}"
+        self.execute_query(sql)
 
     
     def upsert_records(self, tablename, pk, columns, values):
