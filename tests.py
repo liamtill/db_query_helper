@@ -2,7 +2,7 @@ from db_query_helper import PSQL_Connection
 
 host = 'localhost'
 user = 'postgres'
-password = 'Cumulus.5343'
+password = 'stocks'
 database = 'stocks'
 
 try:
