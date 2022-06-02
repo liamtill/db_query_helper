@@ -89,7 +89,7 @@ class PSQL_Connection():
         :return:
         """
 
-        query = f"CREATE DATABASE {dbname}"
+        query = f"CREATE DATABASE {dbname};"
         cursor = self._connection.cursor()
         try:
             cursor.execute(query)
@@ -142,7 +142,7 @@ class PSQL_Connection():
         :return:
         """
 
-        query = f"CREATE TABLE {tablename} ({columns})"
+        query = f"CREATE TABLE {tablename} ({columns});"
         self.execute_query(query)
 
 
@@ -155,7 +155,7 @@ class PSQL_Connection():
         :return:
         """
 
-        query = f"INSERT INTO {tablename}({columns}) VALUES({values})"
+        query = f"INSERT INTO {tablename}({columns}) VALUES({values});"
         self.execute_query(query)
 
 
@@ -171,7 +171,7 @@ class PSQL_Connection():
         :return:
         """
 
-        query = f"INSERT INTO {tablename}({columns}) VALUES({values}) ON CONFLICT DO NOTHING"
+        query = f"INSERT INTO {tablename}({columns}) VALUES({values}) ON CONFLICT DO NOTHING;"
         self.execute_query(query)
 
 
@@ -185,7 +185,7 @@ class PSQL_Connection():
         """
 
         ns = ', '.join(['%s'] * len(values))
-        sql = f"INSERT INTO {tablename}({columns}) VALUES {ns}"
+        sql = f"INSERT INTO {tablename}({columns}) VALUES {ns};"
         self.execute_query_multi(sql, values)
 
 
@@ -199,7 +199,7 @@ class PSQL_Connection():
         """
 
         ns = ', '.join(['%s'] * len(values))
-        sql = f"INSERT INTO {tablename}({columns}) VALUES {ns} ON CONFLICT DO NOTHING"
+        sql = f"INSERT INTO {tablename}({columns}) VALUES {ns} ON CONFLICT DO NOTHING;"
         self.execute_query_multi(sql, values)
 
 
@@ -245,9 +245,8 @@ class PSQL_Connection():
             whereval (str): Value of where condition, value in wherecolumn
         """
 
-        sql = f"UPDATE {tablename} SET {column1} = %s WHERE {wherecolumn} = %s"
+        sql = f"UPDATE {tablename} SET {column1} = %s WHERE {wherecolumn} = %s;"
         val = (val, whereval)
-        print(val)
         self.execute_query_multi(sql, val)
 
 
@@ -260,7 +259,7 @@ class PSQL_Connection():
             value (str): value in column to delete row
         """
 
-        sql = f"DELETE FROM {tablename} WHERE {column} = {value}"
+        sql = f"DELETE FROM {tablename} WHERE {column} = {value};"
         self.execute_query(sql)
 
     
@@ -275,13 +274,13 @@ class PSQL_Connection():
         """
 
         excluded = ', '.join([f'EXCLUDED.{x}' for x in columns.replace(',', '').split()])
-        sql = f"INSERT INTO {tablename}({columns}) VALUES({values}) ON CONFLICT ({pk}) DO UPDATE SET ({columns}) = ({excluded})"
+        sql = f"INSERT INTO {tablename}({columns}) VALUES({values}) ON CONFLICT ({pk}) DO UPDATE SET ({columns}) = ({excluded});"
         self.execute_query(sql)
 
 
     def last_updated(self, table):
 
-        sql = f"SELECT UPDATE_TIME FROM information_schema.tables WHERE TABLE_SCHEMA = '{self._current_db}' AND TABLE_NAME = '{table}'"
+        sql = f"SELECT UPDATE_TIME FROM information_schema.tables WHERE TABLE_SCHEMA = '{self._current_db}' AND TABLE_NAME = '{table}';"
         return self.execute_query(sql)
 
 
@@ -294,7 +293,7 @@ class PSQL_Connection():
     lastupdated = property(get_last_updated, )
 
 
-class SQL_Connection():
+class MYSQL_Connection():
 
     def __init__(self, host, user, password, dbname=None):
 
@@ -395,7 +394,7 @@ class SQL_Connection():
 
     def select_db(self, dbname):
 
-        query = f'''USE {dbname}'''
+        query = f'''USE {dbname};'''
         self.execute_query(query)
         self._current_db = dbname
 
@@ -410,13 +409,11 @@ class SQL_Connection():
         cursor = self._connection.cursor()
         try:
             cursor.execute(query)
-            result = cursor.fetchall()
+            self._connection.commit()
             cursor.close()
         except Exception as err:
             cursor.close()
             raise err
-
-        return result
 
 
     def execute_query_multi(self, sql, val):
@@ -429,7 +426,7 @@ class SQL_Connection():
 
         cursor = self._connection.cursor()
         try:
-            cursor.execute(sql, val)
+            cursor.executemany(sql, val)
             self._connection.commit()
             cursor.close()
         except Exception as err:
@@ -457,7 +454,7 @@ class SQL_Connection():
         :return:
         """
 
-        query = f'''INSERT INTO {tablename} VALUES {values};'''
+        query = f'''INSERT INTO {tablename} VALUES ({values});'''
         self.execute_query(query)
 
 
@@ -472,7 +469,7 @@ class SQL_Connection():
         :return:
         """
 
-        query = f'''INSERT IGNORE INTO {tablename} VALUES {values};'''
+        query = f'''INSERT IGNORE INTO {tablename} VALUES ({values});'''
         self.execute_query(query)
 
 
@@ -485,11 +482,8 @@ class SQL_Connection():
         :return:
         """
 
-        ns = []
-        for i in range(len(values)):
-            ns.append('%s')
-        ns = ', '.join(ns)
-        sql = f'''INSERT INTO {tablename} {columns} VALUES ({ns})'''
+        ns = ', '.join(['%s'] * len(values[0]))
+        sql = f'''INSERT INTO {tablename} ({columns}) VALUES ({ns});'''
         self.execute_query_multi(sql, values)
 
 
@@ -502,11 +496,8 @@ class SQL_Connection():
         :return:
         """
 
-        ns = []
-        for i in range(len(values)):
-            ns.append('%s')
-        ns = ', '.join(ns)
-        sql = f'''INSERT IGNORE INTO {tablename} {columns} VALUES ({ns})'''
+        ns = ', '.join(['%s'] * len(values[0]))
+        sql = f'''INSERT IGNORE INTO {tablename} ({columns}) VALUES ({ns});'''
         self.execute_query_multi(sql, values)
 
 
@@ -532,13 +523,13 @@ class SQL_Connection():
 
     def create_user(self, user, password):
 
-        query = f'''CREATE USER '{user}'@'{self._host}' IDENTIFIED BY '{password}'''
+        query = f'''CREATE USER '{user}'@'{self._host}' IDENTIFIED BY '{password};'''
         self.execute_query(query)
 
 
     def print_table_columns(self, tablename):
 
-        query = f'''SELECT * FROM INFORMATION_SCHEMA.COLUMNS'''
+        query = f'''SELECT * FROM INFORMATION_SCHEMA.COLUMNS;'''
         self.execute_query(query)
 
 
@@ -557,7 +548,7 @@ class SQL_Connection():
     def add_primary_key(self, tablename, columns):
 
         keycols = ', '.join(columns)
-        query = f'''ALTER TABLE {tablename} ADD PRIMARY KEY ({keycols})'''
+        query = f'''ALTER TABLE {tablename} ADD PRIMARY KEY ({keycols});'''
         self.execute_query(query)
 
 
@@ -567,18 +558,16 @@ class SQL_Connection():
         self.execute_query(query)
 
 
-    def update_record(self, tablename, column, oldval, newval):
+    def update_record(self, tablename, column, newval, wherecol, whereval):
 
-        sql = f'''UPDATE {tablename} SET {column} = %s WHERE {column} = %s '''
-        val = (oldval, newval)
-        self.execute_query_multi(sql, val)
+        sql = f'''UPDATE {tablename} SET {column} = '{newval}' WHERE {wherecol} = '{whereval}'; '''
+        self.execute_query(sql)
 
 
     def delete_record(self, tablename, column, value):
 
-        sql = f'''DELETE FROM {tablename} WHERE {column} = %s'''
-        val = (value, )
-        self.execute_query_multi(sql, val)
+        sql = f'''DELETE FROM {tablename} WHERE {column} = '{value}'; '''
+        self.execute_query(sql)
 
 
     def last_updated(self, table):
